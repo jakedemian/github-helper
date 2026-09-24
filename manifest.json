@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Helper",
+  "version": "0.1.0",
+  "description": "A grab bag of small quality-of-life tweaks for github.com.",
+  "permissions": [],
+  "host_permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["src/features/my-open-prs.js", "src/main.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "github-helper@jakedemian.dev",
+      "strict_min_version": "109.0"
+    }
+  }
+}
