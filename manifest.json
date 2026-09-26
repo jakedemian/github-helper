@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GitHub Helper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A grab bag of small quality-of-life tweaks for github.com.",
   "icons": {
     "16": "icons/icon-16.png",

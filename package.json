@@ -1,0 +1,10 @@
+{
+  "name": "github-helper",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "zip": "node scripts/release.mjs --dry-run",
+    "release": "node scripts/release.mjs"
+  }
+}

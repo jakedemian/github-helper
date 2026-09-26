@@ -45,3 +45,39 @@ launch.
 1. Create `src/features/<name>.js` following the pattern in
    `my-open-prs.js`.
 2. Add the file to the `js` array in `manifest.json` before `src/main.js`.
+
+## Releasing
+
+`scripts/release.mjs` bumps the version, builds `dist/github-helper-<version>.zip`,
+uploads it to the Chrome Web Store, and submits it to Firefox Add-ons (AMO).
+
+```
+npm run zip                                  # build the zip only
+node scripts/release.mjs --bump patch        # upload to chrome as draft + submit to amo
+node scripts/release.mjs --bump minor --publish   # also submit the chrome draft for review
+node scripts/release.mjs --version 1.2.3 --chrome-only
+```
+
+Flags: `--bump patch|minor|major`, `--version x.y.z`, `--publish`, `--chrome-only`,
+`--firefox-only`, `--dry-run`.
+
+Secrets live in a gitignored `.env` at the repo root:
+
+```
+CHROME_EXTENSION_ID=
+CHROME_CLIENT_ID=
+CHROME_CLIENT_SECRET=
+CHROME_REFRESH_TOKEN=
+AMO_JWT_ISSUER=
+AMO_JWT_SECRET=
+```
+
+The Chrome values come from a Google Cloud project with the Chrome Web Store API
+enabled and a Desktop OAuth client. The refresh token is obtained once through the
+OAuth consent flow with the `https://www.googleapis.com/auth/chromewebstore` scope.
+If the OAuth consent screen is left in "Testing", the refresh token expires every
+7 days; publish the consent screen to production to make it permanent. The AMO
+values come from https://addons.mozilla.org/developers/addon/api/key/.
+
+A store that is missing its keys is skipped with a warning. Store listing text,
+screenshots, and privacy answers are managed in each store's dashboard, not here.
