@@ -3,11 +3,13 @@
 //
 //   node scripts/release.mjs [--bump patch|minor|major | --version x.y.z]
 //                            [--publish] [--chrome-only | --firefox-only] [--dry-run]
+//                            [--validate-only]   (firefox: upload + validate, no version)
 //
 // secrets come from .env at the repo root (see readme). without --publish the
 // chrome upload lands as a draft; firefox submissions always go to review.
 
 import { execFileSync } from 'node:child_process';
+import { createHmac, randomUUID } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -122,25 +124,50 @@ async function pushChrome() {
 }
 
 // ---------------------------------------------------------------- firefox
-function pushFirefox() {
+// talks to the amo api directly instead of `web-ext sign`, which polls for a
+// signed file that listed add-ons only get after human review.
+const AMO = 'https://addons.mozilla.org/api/v5';
+const amoJwt = () => {
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64({ alg: 'HS256', typ: 'JWT' });
+  const body = b64({ iss: env.AMO_JWT_ISSUER, jti: randomUUID(), iat: now, exp: now + 300 });
+  const sig = createHmac('sha256', env.AMO_JWT_SECRET).update(`${head}.${body}`).digest('base64url');
+  return `JWT ${head}.${body}.${sig}`;
+};
+const amo = async (path, init = {}) => {
+  const res = await fetch(`${AMO}${path}`, { ...init, headers: { ...init.headers, authorization: amoJwt() } });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`amo ${init.method ?? 'GET'} ${path} -> ${res.status} ${JSON.stringify(json)}`);
+  return json;
+};
+
+async function pushFirefox() {
   if (!firefoxReady) {
     console.log('firefox: skipped, missing AMO_* keys in .env');
     return;
   }
-  execFileSync(
-    'npx',
-    [
-      '--yes', 'web-ext@10', 'sign',
-      '--source-dir', stage,
-      '--artifacts-dir', join(dist, 'firefox'),
-      '--channel', 'listed',
-      '--api-key', env.AMO_JWT_ISSUER,
-      '--api-secret', env.AMO_JWT_SECRET,
-      '--no-config-discovery',
-    ],
-    { stdio: 'inherit' },
-  );
-  console.log(`firefox: submitted ${version} for review`);
+  const addonId = manifest.browser_specific_settings.gecko.id;
+
+  const form = new FormData();
+  form.append('upload', new Blob([readFileSync(zipPath)], { type: 'application/zip' }), `github-helper-${version}.zip`);
+  form.append('channel', 'listed');
+  let upload = await amo('/addons/upload/', { method: 'POST', body: form });
+
+  // amo validates the package asynchronously; poll until it reports back
+  for (let i = 0; i < 60 && !upload.processed; i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    upload = await amo(`/addons/upload/${upload.uuid}/`);
+  }
+  if (!upload.processed) throw new Error('firefox: validation timed out');
+  if (!upload.valid) throw new Error(`firefox: validation failed ${JSON.stringify(upload.validation?.messages ?? upload)}`);
+  console.log(`firefox: package validated (${upload.validation?.warnings ?? 0} warnings)`);
+  if (flag('--validate-only')) return;
+
+  const body = JSON.stringify({ upload: upload.uuid, license: 'MIT' });
+  const headers = { 'content-type': 'application/json' };
+  const created = await amo(`/addons/addon/${addonId}/versions/`, { method: 'POST', headers, body });
+  console.log(`firefox: submitted ${created.version} for review (${created.channel})`);
 }
 
 const only = flag('--chrome-only') ? 'chrome' : flag('--firefox-only') ? 'firefox' : null;

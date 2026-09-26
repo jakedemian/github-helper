@@ -59,7 +59,12 @@ node scripts/release.mjs --version 1.2.3 --chrome-only
 ```
 
 Flags: `--bump patch|minor|major`, `--version x.y.z`, `--publish`, `--chrome-only`,
-`--firefox-only`, `--dry-run`.
+`--firefox-only`, `--dry-run`, `--validate-only` (Firefox: upload and validate the
+package without creating a version).
+
+Firefox has no draft state: every run creates a listed version that goes straight
+into Mozilla's review queue. The AMO listing slug is `github-helper1` and the
+license sent with each version is MIT, matching `LICENSE`.
 
 Secrets live in a gitignored `.env` at the repo root:
 
