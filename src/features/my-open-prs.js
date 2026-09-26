@@ -3,7 +3,9 @@
 (() => {
   const BUTTON_ID = 'gh-helper-my-open-prs';
   const QUERY = 'is:pr state:open author:@me';
-  const PULLS_PATH = /^\/([^/]+)\/([^/]+)\/pulls\/?$/;
+  // matches the list page and its sidebar views like /pulls/<username>
+  // ("authored by me"), /pulls/assigned, /pulls/mentioned, /pulls/review-requested
+  const PULLS_PATH = /^\/([^/]+)\/([^/]+)\/pulls(?:\/[^/]+)?\/?$/;
 
   const parseRepo = () => {
     const match = window.location.pathname.match(PULLS_PATH);
