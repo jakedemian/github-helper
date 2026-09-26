@@ -8,6 +8,9 @@ quality-of-life tweaks for github.com.
 - **My Open PRs**: on a repo's pull request list (`/owner/repo/pulls`), adds a
   "My Open PRs" button next to "New pull request" that filters the list to
   `is:pr state:open author:@me`.
+- **Scroll to top**: on a GitHub Actions job log page
+  (`/owner/repo/actions/runs/N/job/N`), shows a floating "Scroll to top" button
+  once you've scrolled more than a screen down. Click to smooth-scroll back up.
 
 ## Local install
 
@@ -39,6 +42,7 @@ launch.
   GitHub's turbo navigation, and on dom changes.
 - `src/features/*.js`: one file per feature. Each pushes `{ name, run }` onto
   `window.__ghHelperFeatures`. `run` must be idempotent.
+- `src/styles.css`: shared stylesheet for any feature that needs css.
 
 ## Adding a feature
 

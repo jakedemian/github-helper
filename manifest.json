@@ -19,9 +19,13 @@
       ],
       "js": [
         "src/features/my-open-prs.js",
+        "src/features/scroll-to-top.js",
         "src/main.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "css": [
+        "src/styles.css"
+      ]
     }
   ],
   "browser_specific_settings": {

@@ -1,0 +1,28 @@
+/* scroll-to-top feature */
+#gh-helper-scroll-top {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 999999;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--bgColor-accent-emphasis, #1f6feb);
+  color: var(--fgColor-onEmphasis, #fff);
+  font: 600 14px/1 inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  box-shadow: var(--shadow-floating-small, 0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+#gh-helper-scroll-top.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#gh-helper-scroll-top:hover {
+  filter: brightness(1.15);
+}
